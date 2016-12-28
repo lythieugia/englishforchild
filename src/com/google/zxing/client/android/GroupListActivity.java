@@ -2,7 +2,6 @@ package com.google.zxing.client.android;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
@@ -36,10 +35,14 @@ public class GroupListActivity extends Activity implements GroupCallback {
 	private int mLessonId = -1;
 	private Button btnRate;
 	private int mCurrentUserId = -1;
+	private ArrayList<Word> mWordList;
+	private int mSelectedId = -1;
+	public static Boolean SHOULD_RELOAD_DATA = false;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Log.e("GroupListLog", "onCreate");
 		Bundle extra = getIntent().getExtras();
 		if (extra != null) {
 			mLesson = (Lesson) extra.getSerializable(Utils.LESSON_CONTENT);
@@ -67,6 +70,17 @@ public class GroupListActivity extends Activity implements GroupCallback {
 		mGvGroups.setAdapter(mGroupsAdapter);
 		initProgressBar();
 		initData();
+		SHOULD_RELOAD_DATA = false;
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		Log.e("GroupListLog", "onResume");
+		if (SHOULD_RELOAD_DATA) {
+			initData();
+			SHOULD_RELOAD_DATA = false;
+		}
 	}
 
 	private void gotoScan(Group group){
@@ -77,6 +91,7 @@ public class GroupListActivity extends Activity implements GroupCallback {
 	
 	private void gotoRating(){
 		Intent i = new Intent(this, StudentRatingActivity.class);
+		i.putExtra(Utils.LESSON_ID, mLessonId);
 		startActivity(i);
 	}
 	
@@ -90,15 +105,13 @@ public class GroupListActivity extends Activity implements GroupCallback {
 		Log.e("ALL_GROUP", "student id"+mCurrentUserId);
 		param.add(new BasicNameValuePair("lessonId", String.valueOf(mLessonId)));
 		Thread thread = new Thread(new Runnable() {
-
 			@Override
 			public void run() {
-
 				String response = HttpHelper.makeServerCall(url, HttpHelper.GET, param);
 				Log.e("ALL_GROUP", response);
 				if (response != null) {
 					try {
-						dismissDialog();
+						mGroupsList.clear();
 						JSONObject jsonObj = new JSONObject(response);
 						if (jsonObj.has("ok") && !jsonObj.isNull("ok")) {
 							Boolean ok = jsonObj.getBoolean("ok");
@@ -116,9 +129,7 @@ public class GroupListActivity extends Activity implements GroupCallback {
 										}
 										
 									}
-									if (mGroupsAdapter != null) {
-										mGroupsAdapter.notifyDataSetChanged();
-									}
+									
 								}
 								sendHandlerMessage(100);
 							} else {
@@ -128,6 +139,55 @@ public class GroupListActivity extends Activity implements GroupCallback {
 							sendHandlerMessage(102);
 						}
 						
+						
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}
+			}
+		});
+		thread.start();
+	}
+	
+	public void getWordList(int groupId){
+		if (mProgressDialog != null && !mProgressDialog.isShowing()) {
+			mProgressDialog.show();
+		}
+		mWordList = new ArrayList<Word>();
+		final String url = HttpHelper.TAG_HOST + HttpHelper.TAG_VOCABULARY;
+		final List<NameValuePair> param = new ArrayList<NameValuePair>();
+		param.add(new BasicNameValuePair("groupId", String.valueOf(groupId)));
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				String response = HttpHelper.makeServerCall(url, HttpHelper.GET, param);
+				if (response != null) {
+					try {
+						JSONObject jsonObj = new JSONObject(response);
+						if (jsonObj.has("ok") && !jsonObj.isNull("ok")) {
+							Boolean ok = jsonObj.getBoolean("ok");
+							if (ok) {
+								if (jsonObj.has("result") && !jsonObj.isNull("result")) {
+									JSONArray resultList = jsonObj.getJSONArray("result");
+									for(int i = 0 ; i < resultList.length();i++){
+										JSONObject wordJson = resultList.getJSONObject(i);
+										int id = wordJson.getInt("Id");
+										String content = wordJson.getString("Word");
+										String imageId = wordJson.getString("ImageId");
+										String imgeUrl = wordJson.getString("ImageUrl");
+										Word word  = new Word(id,content,imageId,imgeUrl);
+										mWordList.add(word);
+									}
+								}
+								sendHandlerMessage(103);
+							} else {
+								sendHandlerMessage(104);
+							}
+						} else {
+							sendHandlerMessage(104);
+						}
 						
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block
@@ -166,12 +226,28 @@ public class GroupListActivity extends Activity implements GroupCallback {
 	
 	Handler handler = new Handler(){
 		public void handleMessage(Message msg) {
-			
 			if(msg.what == 100){
-				
-				
+				dismissDialog();
+				if (mGroupsAdapter != null) {
+					mGroupsAdapter.notifyDataSetChanged();
+				}
 			} else if (msg.what == 102) {
+				dismissDialog();
 				Toast.makeText(GroupListActivity.this, "Error", Toast.LENGTH_LONG).show();;
+			} else if (msg.what == 103) {
+				dismissDialog();
+				if (mSelectedId > 0) {
+					for (int i = 0; i < mGroupsList.size(); i++) {
+						if (mGroupsList.get(i).getId() == mSelectedId) {
+							mGroupsList.get(i).setWordList(mWordList);
+							mWordList = new ArrayList<Word>();
+							mSelectedId = -1;
+							gotoScan(mGroupsList.get(i));
+						}
+					}
+				}
+			} else if (msg.what == 104) {
+				dismissDialog();
 			}
 		};
 	};
@@ -190,9 +266,14 @@ public class GroupListActivity extends Activity implements GroupCallback {
 
 	@Override
 	public void onClickGroup(int pos) {
-		Group entry  = mGroupsList.get(pos);
-		gotoScan(entry);
+		Group entry = mGroupsList.get(pos);
+		if (entry != null) {
+			if (entry.getWordList() == null || entry.getWordList().size() == 0) {
+				getWordList(entry.getId());
+				mSelectedId = entry.getId();
+			} else {
+				gotoScan(entry);
+			}
+		}
 	}
-
-	
 }

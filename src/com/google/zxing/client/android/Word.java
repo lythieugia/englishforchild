@@ -3,6 +3,7 @@ package com.google.zxing.client.android;
 import java.io.Serializable;
 
 public class Word implements Serializable  {
+	private int id;
 	private String word;
 	private String imageId;
 	private String imageFile;
@@ -13,11 +14,21 @@ public class Word implements Serializable  {
 		super();
 	}
 	
-	public Word(String word, String imageId, String imageFile) {
+	public Word(int id,String word, String imageId, String imageFile) {
 		super();
+		this.id = id;
 		this.word = word;
 		this.imageId = imageId;
 		this.imageFile = imageFile;
+	}
+
+	
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public String getWord() {

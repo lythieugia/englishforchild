@@ -180,6 +180,9 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		Bundle extra = getIntent().getExtras();
 		if (extra != null) {
 			mWordGroup = (Group) extra.getSerializable(Utils.GROUP_CONTENT);
+			for(int i = 0; i <mWordGroup.getWordList().size(); i++){
+				Log.e("WordGroup123", "size: "+mWordGroup.getWordList().get(i).getWord());
+			}
 		}
 		
 		hasSurface = false;
@@ -470,7 +473,9 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 						if (checkPassedGroup(mWord)) {
 							Toast.makeText(getApplicationContext(), " You passed this Chapter  ", Toast.LENGTH_SHORT)
 							.show();
-							finish();
+							setResultToPoPost();
+							sendResult();
+							//finish();
 						}
 					} else {
 						mWrongSpeakNumber++;
@@ -663,78 +668,18 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			mWrongSpeakNumber = 0;
 			mParam = new ArrayList<NameValuePair>();
 			mParam.add(new BasicNameValuePair("imageId", displayContents.toString().trim()));
-			/*Thread thread = new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-
-					String response = HttpHelper.makeServerCall(mURL, HttpHelper.GET, mParam);
-					if (response != null) {
-						try {
-							Log.e("GROUP_WORD",response.toString());
-							JSONObject jsonObj = new JSONObject(response);
-							if (jsonObj.has("ok") && !jsonObj.isNull("ok")) {
-								Boolean ok = jsonObj.getBoolean("ok");
-								if (ok) {								
-									if(jsonObj.has("result") && !jsonObj.isNull("result")){
-										JSONObject result  = jsonObj.getJSONObject("result");
-										int groupId = result.getInt("groupId");
-										String groupName = result.getString("groupName");
-										JSONArray vocals = result.getJSONArray("vocabularies");
-										ArrayList<Word> list = new ArrayList<Word>();
-										for (int i = 0; i < vocals.length(); i++) {
-											String word = vocals.getJSONObject(i).getString("word");
-											String imageId = vocals.getJSONObject(i).getString("imageId");
-											String imageFile = vocals.getJSONObject(i).getString("imageUrl");
-											Word vocal = new Word(word, imageId, imageFile);
-											list.add(vocal);
-										}
-									
-										WordGroup group = new WordGroup(groupId,groupName,list);
-									
-									}
-									getWordHandler.sendEmptyMessage(HttpHelper.LOAD_WORD_DONE);
-								} else {
-									if (jsonObj.has("message") && !jsonObj.isNull("message")) {
-										String message = jsonObj.getString("message");
-										getWordHandler.sendEmptyMessage(HttpHelper.LOAD_WORD_ERROR);
-									} else {
-										getWordHandler.sendEmptyMessage(HttpHelper.LOAD_ERROR);
-									}
-								}
-							} else {
-								getWordHandler.sendEmptyMessage(HttpHelper.LOAD_WORD_ERROR);
-							}
-						
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-
-					} else {
-						getWordHandler.sendEmptyMessage(HttpHelper.LOAD_WORD_NETWORD_ERROR);
-						setWorkingStatus(false);
-					}
-				}
-			});
-			thread.start();*/
+			
 		}
 	}
 	private void sendResult(){
-		
-		Toast.makeText(getApplicationContext(),
-				"You've passed this challenge. Please go to the next  challenge.", Toast.LENGTH_LONG)
-				.show();
-		
 		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				String url = HttpHelper.TAG_HOST + HttpHelper.TAG_SEND_RESULT;
 				PostGroup postData = new PostGroup(mCurrentUserId,mArrResult);
 				String postMessage = new Gson().toJson(postData);
+				Log.e("RESULT_UPDATE", "postMessage: " + postMessage);
 				try {
 					int TIMEOUT_MILLISEC = 10000; // = 10 seconds
-					
 					HttpParams httpParams = new BasicHttpParams();
 					HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISEC);
 					HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISEC);
@@ -745,13 +690,29 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 					se.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
 					request.setEntity(se);
 					HttpResponse response = client.execute(request);
-					Log.e("RESULT_UPDATE", "response: " + EntityUtils.toString(response.getEntity()));
+					String resultResponse = EntityUtils.toString(response.getEntity());
+					Log.e("RESULT_UPDATE", "response: " + resultResponse);
+					JSONObject jsonObj = new JSONObject(resultResponse);
+					if (jsonObj.has("ok") && !jsonObj.isNull("ok")) {
+						Boolean ok = jsonObj.getBoolean("ok");
+						if (ok) {
+							Log.e("RESULT_UPDATE", "ok: " + ok);
+							sendHandlerMessage(HttpHelper.UPDATED_RESULT);
+						}
+					}
+					
 				} catch (Exception e) {
 					
 				}
 			}
 		});
 		thread.start();
+	}
+	
+	private void sendHandlerMessage(int code){
+		Message msg = getWordHandler.obtainMessage();
+		msg.what = code;
+		getWordHandler.sendMessage(msg);
 	}
 
 	// Briefly show the contents of the barcode, then handle the result outside
@@ -934,66 +895,13 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		}
 	}
 
-	private void  getWordGroupId(String imageId){
-		
-		Thread thread = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-
-				String response = HttpHelper.makeServerCall(mURL, HttpHelper.GET, mParam);
-				if (response != null) {
-					try {
-						JSONObject jsonObj = new JSONObject(response);
-						if (jsonObj.has("ok") && !jsonObj.isNull("ok")) {
-							Boolean ok = jsonObj.getBoolean("ok");
-							if (ok) {
-								getWordHandler.sendEmptyMessage(HttpHelper.LOAD_WORD_DONE);
-							} else {
-								if (jsonObj.has("message") && !jsonObj.isNull("message")) {
-									String message = jsonObj.getString("message");
-									Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-								} else {
-									Toast.makeText(getApplicationContext(), "There're some errors",
-											Toast.LENGTH_LONG).show();
-								}
-							}
-						} else {
-							Toast.makeText(getApplicationContext(), "Wrong QR Code! Please Try Again",
-									Toast.LENGTH_LONG).show();
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-
-				} else {
-					getWordHandler.sendEmptyMessage(HttpHelper.LOAD_WORD_NETWORD_ERROR);
-					setWorkingStatus(false);
-				}
-			}
-		});
-		thread.start();
-	}
-	
 	Handler getWordHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			if (msg.what == HttpHelper.LOAD_WORD_DONE) {
-				/*mWord = getWordByGroupImageId(mImageURL);
-				if(textIsNotEmpty(mWord)){
-					if (checkPassedGroup(mWord)) {
-						int groupId = getGroupIndexByWord(mWord);
-						setResultToPoPost(groupId);
-						sendResult();
-						return;
-					}
-				} else {
-					Toast.makeText(getApplicationContext(), "Can not find this word", Toast.LENGTH_LONG).show();
-					return;
-				}*/
 				ImageView image = (ImageView) findViewById(R.id.imgWord);
-				String imageUrl = getImageByGroupImageId(mImageId);
-				Log.e("DECODE_RESULT", "imageUrl "+mWord);
+				String imageUrl = HttpHelper.TAG_HOST+getImageByGroupImageId(mImageId);
+				Log.e("DECODE_RESULT", "imageUrl "+imageUrl);
 				Picasso.with(getApplicationContext()).load(imageUrl).placeholder(R.drawable.loader).into(image);
 	
 			} else if ((msg.what == HttpHelper.LOAD_WORD_ERROR)) {
@@ -1023,7 +931,12 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			if ((msg.what == HttpHelper.LOAD_ERROR)) {
 				Toast.makeText(getApplicationContext(), "Conection is error!", Toast.LENGTH_LONG).show();
 			}
-
+			
+			if ((msg.what == HttpHelper.UPDATED_RESULT)) {
+				Log.e("RESULT_UPDATE", "handler: ");
+				GroupListActivity.SHOULD_RELOAD_DATA = true;
+				finish();
+			}
 		}
 	};
 
@@ -1092,23 +1005,21 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		return true;
 	}
 	
-	/*
-	private void setResultToPoPost(int groupId){
-		ArrayList<Word> list = GROUP_LIST.get(groupId).getWordList();	
+	public void setResultToPoPost(){
+		ArrayList<Word> list = mWordGroup.getWordList();	
 		if (mArrResult == null) {
 			mArrResult =  new ArrayList<ResultWord>();
 		}
 		mArrResult.clear();
 		for (int i = 0; i < list.size(); i++) {
-			ResultWord resultWord = new ResultWord(list.get(i).getImageId(),list.get(i).getWrongCount());
+			ResultWord resultWord = new ResultWord(""+list.get(i).getId(),list.get(i).getWrongCount());
 			mArrResult.add(resultWord);	
 		}
-	}*/
+	}
+	
+	
 
 	/*
-	
-
-	
 	private boolean checkDataGroupIsNotNull(int pId) {
 		if (GROUP_LIST.size() > 0) {
 			for (int i = 0; i < GROUP_LIST.size(); i++) {
@@ -1134,7 +1045,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	}
 	
 	private Boolean isSpeakingCorrect(String speak, String word) {
-		if (speak != "" && word != "") {
+		if (Utils.textIsNotEmpty(speak) && Utils.textIsNotEmpty(word)) {
 			speak = speak.toLowerCase();
 			word = word.toLowerCase();
 			if (speak.contains(word)) {

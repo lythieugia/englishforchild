@@ -51,18 +51,21 @@ import android.util.Log;
 public final class HttpHelper {
 
 	
-	public static String TAG_HOST = "http://192.168.0.104:63627";
+	public static String TAG_HOST = "http://192.168.11.7:63627";
 	public static String TAG_LOGIN = "/api/GetStudentByName";
 	public static String TAG_LESSON = "/api/GetAllLessonByStudentId";
 	public static String TAG_GROUP = "/api/GetAllGroupByLessonId";
+	public static String TAG_VOCABULARY	 = "/api/GetAllVocabularyByGroupId";
 	public static String TAG_IMG = "/img/";
 	public static String TAG_GET_GROUP_WORD= "/api/GetGroupVocabularyByImageId";
 	public static String TAG_SEND_RESULT= "/api/UpdateResult";
-	public static String TAG_IMAGE_URL = TAG_HOST+"/vocabulary/images/";
+	public static String TAG_SEND_FEEDBACKS= "/api/StudentLikeLesson";
+	public static String TAG_IMAGE_URL = TAG_HOST+"/img/vocabulary/";
 	public static int LOAD_WORD_DONE = 100;
 	public static int LOAD_WORD_NETWORD_ERROR = 101;
 	public static int LOAD_WORD_ERROR = 102;
 	public static int LOAD_ERROR = 103;
+	public static int UPDATED_RESULT = 104;
 	public static String TAG_ID = "id";
 	public static String TAG_WORD = "word";
 	public static String TAG_IMAGE = "image";

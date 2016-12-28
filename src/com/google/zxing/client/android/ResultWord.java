@@ -1,12 +1,12 @@
 package com.google.zxing.client.android;
 
 public class ResultWord {
-	String imageId;
+	String vocabularyId;
 	int numberOfWrongTimes;
 
-	public ResultWord(String imageId, int numberOfWrongTimes) {
+	public ResultWord(String vocabularyId, int numberOfWrongTimes) {
 		super();
-		this.imageId = imageId;
+		this.vocabularyId = vocabularyId;
 		this.numberOfWrongTimes = numberOfWrongTimes;
 	}
 
@@ -14,12 +14,12 @@ public class ResultWord {
 		super();
 	}
 
-	public String getImageId() {
-		return imageId;
+	public String getVocabularyId() {
+		return vocabularyId;
 	}
 
-	public void setImageId(String imageId) {
-		this.imageId = imageId;
+	public void setVocabularyId(String vocabularyId) {
+		this.vocabularyId = vocabularyId;
 	}
 
 	public int getNumberOfWrongTimes() {

@@ -26,6 +26,4 @@ public class PostGroup {
 	public void setResults(ArrayList<ResultWord> results) {
 		this.results = results;
 	}
-	
-	
 }

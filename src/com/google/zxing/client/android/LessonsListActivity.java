@@ -60,7 +60,7 @@ public class LessonsListActivity extends Activity implements LessonCallback {
 				String response = HttpHelper.makeServerCall(url, HttpHelper.GET, param);
 				if (response != null) {
 					try {
-						dismissDialog();
+						
 						JSONObject jsonObj = new JSONObject(response);
 						if (jsonObj.has("ok") && !jsonObj.isNull("ok")) {
 							Boolean ok = jsonObj.getBoolean("ok");
@@ -71,9 +71,7 @@ public class LessonsListActivity extends Activity implements LessonCallback {
 										Lesson lesson = getLessonFromJSon(resultList.getJSONObject(i));
 										mLessonsList.add(lesson);
 									}
-									if (mLessonAdapter != null) {
-										mLessonAdapter.notifyDataSetChanged();
-									}
+									
 								}
 								sendHandlerMessage(100);
 							} else {
@@ -130,9 +128,13 @@ public class LessonsListActivity extends Activity implements LessonCallback {
 		public void handleMessage(Message msg) {
 			
 			if(msg.what == 100){
-				
+				dismissDialog();
+				if (mLessonAdapter != null) {
+					mLessonAdapter.notifyDataSetChanged();
+				}
 				
 			} else if (msg.what == 102) {
+				dismissDialog();
 				Toast.makeText(LessonsListActivity.this, "Error", Toast.LENGTH_LONG).show();;
 			}
 		};
