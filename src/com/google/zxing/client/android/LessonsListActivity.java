@@ -20,6 +20,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -29,6 +32,7 @@ public class LessonsListActivity extends Activity implements LessonCallback {
 	private GridView mGvLessons;
 	private ProgressDialog mProgressDialog;
 	private int mCurrentUserId = -1;
+	private Button btnLogout;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,19 @@ public class LessonsListActivity extends Activity implements LessonCallback {
 		mLessonsList = new ArrayList<Lesson>();
 		mLessonAdapter = new LessonAdapter(this, mLessonsList,this);
 		mGvLessons.setAdapter(mLessonAdapter);
+		btnLogout = (Button) findViewById(R.id.btn_logout);
+		btnLogout.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				User.removeUserLocal(LessonsListActivity.this);
+				
+                Intent intent = new Intent(LessonsListActivity.this, LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+			}
+		});
 		initProgressBar();
 		initData();
 	}

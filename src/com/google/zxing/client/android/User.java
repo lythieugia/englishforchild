@@ -29,6 +29,10 @@ public class User {
 		return mInstance;
 	}
 	
+	public static void setInstance(User user) {
+		 mInstance = user;
+	}
+	
 	public static User getInstance(Activity context) {
 		if (mInstance == null) {
 			if (context != null) {
@@ -81,6 +85,7 @@ public class User {
 	}
 	
 	public static void removeUserLocal(Activity context){
+		User.setInstance(null);
 		SharedPreferences sharedPref = context.getSharedPreferences(SHARE_USER_KEY,Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.clear();

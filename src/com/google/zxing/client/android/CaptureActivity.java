@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -36,7 +37,6 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
@@ -459,11 +459,21 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			switch (requestCode) {
 			case REQ_CODE_SPEECH_INPUT: {
 				if (resultCode == RESULT_OK && null != intent) {
-
-					ArrayList<String> result = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+					ArrayList<String> result = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);					
+					//Toast.makeText(getApplicationContext(), "You speak: "+result.get(0), 1).show();
+					int i = new Random().nextInt(2)+1;
+					//Toast.makeText(getApplicationContext(), "radom: "+i, 1).show();
+					Boolean charTrue = false;
+					String value1 = Character.toString(result.get(0).charAt(1));
+					String valaue2 = Character.toString(mWord.charAt(1));
 					
-					Toast.makeText(getApplicationContext(), "You speak: "+result.get(0), 1).show();
-					if (isSpeakingCorrect(result.get(0), mWord)) {
+					if(valaue2.equals(value1)){
+						charTrue = true;
+					} else {
+						charTrue = false;
+					};
+					 
+					if (isSpeakingCorrect(result.get(0), mWord) || (mWrongSpeakNumber >= i && charTrue)) {
 						Toast.makeText(getApplicationContext(), "Correct! The word is  " + mWord, Toast.LENGTH_SHORT)
 								.show();
 						playSound();
@@ -639,7 +649,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
 		setWorkingStatus(true);
 		CharSequence displayContents = resultHandler.getDisplayContents();
-		Toast.makeText(getApplicationContext(), displayContents, Toast.LENGTH_LONG).show();
+		
 		if (displayContents != "null") {		
 			mWord = "";
 			mImageId = displayContents.toString();
@@ -1038,13 +1048,13 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).getWord().equals(word)) {
 				mWordGroup.getWordList().get(i).setPassed(true);
-				;
 				break;
 			}
 		}
 	}
 	
 	private Boolean isSpeakingCorrect(String speak, String word) {
+		Log.e("WORD_SPEAK", "content: "+speak);
 		if (Utils.textIsNotEmpty(speak) && Utils.textIsNotEmpty(word)) {
 			speak = speak.toLowerCase();
 			word = word.toLowerCase();

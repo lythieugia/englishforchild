@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
-    android:orientation="vertical" >
-
+     >
+  <Button
+        android:id="@+id/btn_logout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="5dp"
+        android:textColor="@android:color/white"
+        android:background="@drawable/button_background"
+        android:text="Logout"
+        android:textSize="25sp" />
     <GridView
         android:id="@+id/gv_lesson"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+          android:layout_above="@id/btn_logout"
         android:layout_marginTop="50dp"
         android:gravity="center_horizontal"
         android:numColumns="2" >
     </GridView>
 
-</LinearLayout>
+</RelativeLayout>

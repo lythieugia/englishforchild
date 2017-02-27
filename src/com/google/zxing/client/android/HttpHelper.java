@@ -51,7 +51,7 @@ import android.util.Log;
 public final class HttpHelper {
 
 	
-	public static String TAG_HOST = "http://192.168.11.7:63627";
+	public static String TAG_HOST = "http://192.168.0.106:63627";
 	public static String TAG_LOGIN = "/api/GetStudentByName";
 	public static String TAG_LESSON = "/api/GetAllLessonByStudentId";
 	public static String TAG_GROUP = "/api/GetAllGroupByLessonId";
